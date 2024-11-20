@@ -5,9 +5,24 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
-from bs4 import BeautifulSoup
+import time
 import datetime
 import traceback
+
+def scroll_page_slowly(driver, scroll_pause_time=1.0, scroll_increment=300, max_scrolls=10):
+    """Function to scroll the page gradually to load images dynamically."""
+    # Get the current scroll height of the page
+    last_height = driver.execute_script("return document.body.scrollHeight")
+    
+    for _ in range(max_scrolls):
+        driver.execute_script(f"window.scrollBy(0, {scroll_increment});")  # Scroll down by a fixed increment
+        time.sleep(scroll_pause_time)  # Wait for content to load
+        
+        # Get the new scroll height and check if we've reached the bottom of the page
+        new_height = driver.execute_script("return document.body.scrollHeight")
+        if new_height == last_height:  # If we've reached the bottom, break the loop
+            break
+        last_height = new_height
 
 def scrape_product_details(url):
     scraped_data = []
@@ -16,6 +31,9 @@ def scrape_product_details(url):
         driver.maximize_window()
         driver.get(url)
         print(f"[{datetime.datetime.now()}] Webpage loaded.")
+
+        # Scroll the page slowly to load dynamic content like images
+        scroll_page_slowly(driver, scroll_pause_time=2, scroll_increment=300, max_scrolls=10)
 
         wait = WebDriverWait(driver, 10)
         product_containers = wait.until(EC.visibility_of_all_elements_located((By.CLASS_NAME, "ProductModule__imageAndDescriptionWrapper")))
@@ -40,7 +58,7 @@ def scrape_product_details(url):
             try:
                 original_price = container.find_element(By.XPATH, './/div[@class="ProductDescription__priceCancelled ProductDescription__priceHolder"]/span').text.strip()
             except NoSuchElementException:
-                original_price = "Price not available"
+                original_price = current_price
 
             try:
                 discount = container.find_element(By.CLASS_NAME, 'ProductDescription__newDiscountPercent').text.strip()
@@ -90,8 +108,7 @@ def index(request):
     else:
         form = ScrapeForm()
 
-    return render(request, 'tatacliq_scraper.html', {'form': form, 'scraped_data': scraped_data,
-    'total_products': total_products})
+    return render(request, 'tatacliq_scraper.html', {'form': form, 'scraped_data': scraped_data, 'total_products': total_products})
 
 def scrape_and_store(request):
     scraped_data = request.session.get('scraped_data', None)

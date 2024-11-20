@@ -125,6 +125,9 @@
         margin-top: 50px;
         margin-bottom: 30px;
       }
+      .products-container {
+        display: none;
+      }
     </style>
   </head>
 
@@ -182,24 +185,27 @@
         </div>
       </form>
 
+      {% if scraped_data %}
+      <p><strong>Total Products Found:</strong> {{ scraped_data|length }}</p>
+      {% endif %}
+
       <!-- Product cards layout -->
-      <div class="row g-4">
+      <div class="row g-4 products-container">
         {% if scraped_data %} {% for product in scraped_data %}
         <div class="col-md-3">
           <div class="card">
             <img
-              src="{{ product.image_url }}"
+              src="{{ product.image}}"
               class="card-img-top"
               alt="Product Image"
             />
             <div class="card-body">
               <h5 class="card-title">{{ product.name }}</h5>
               <p class="card-text">
-                <strong>Price:</strong> ${{ product.price }} <br />
-                <strong>Original Price:</strong> ${{ product.discounted_price }}
+                <strong>Price:</strong> {{ product.price }} <br />
+                <strong>Original Price:</strong> {{ product.discounted_price }}
                 <br />
                 <strong>Discount:</strong> {{ product.discount }} <br />
-                <strong>Color:</strong> {{ product.color }}
               </p>
               <a
                 href="{{ product.product_url }}"

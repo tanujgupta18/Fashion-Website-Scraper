@@ -43,7 +43,7 @@ def scrape_pepejeans_products(url):
                 original_price = original_price_tag.find('span', class_='value').get('content')
                 product_data['original_price'] = format_price(original_price)
             else:
-                product_data['original_price'] = None
+                product_data['original_price'] = current_price
 
             current_price_tag = product.find('span', class_='sales discount-sales')
             if current_price_tag:
@@ -57,7 +57,7 @@ def scrape_pepejeans_products(url):
                 discount_percentage = discount_percentage_tag.get_text(strip=True).replace('(', '').replace(')', '')
                 product_data['discount_percentage'] = discount_percentage
             else:
-                product_data['discount_percentage'] = None
+                product_data['discount_percentage'] = "Discount not available"
 
             product_image_url = product.find('img', class_='tile-image')['data-src']
             product_data['image_url'] = product_image_url
@@ -73,14 +73,6 @@ def scrape_pepejeans_products(url):
                 continue
 
             product_soup = BeautifulSoup(product_response.content, 'html.parser')
-
-            color_options = product_soup.find('div', class_='attribute-color')
-            if color_options:
-                colors = color_options.find_all('span', class_='color-value')
-                color_list = [color.get('data-attr-value') for color in colors]
-                product_data['colors'] = color_list
-            else:
-                product_data['colors'] = None
 
             scraped_products.append(product_data)
 
